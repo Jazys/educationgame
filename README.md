@@ -1,5 +1,10 @@
 # testgame
 
+#package
+Vue VS code Extension Pack
+Debugger for chrome
+https://github.com/microsoft/vscode-recipes/tree/master/vuejs-cli
+
 ## Project setup
 ```
 npm install

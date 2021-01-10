@@ -1,28 +1,26 @@
 <template>
-  <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
-  </div>
+  <Game />
 </template>
 
-<script>
-import HelloWorld from './components/HelloWorld.vue'
 
+<script>
+
+// https://supernapie.com/blog/loading-assets-as-data-uri-in-phaser-3/
+
+import Game from '@/components/Game'
 export default {
   name: 'App',
-  components: {
-    HelloWorld
-  }
+  components: { Game }
 }
 </script>
 
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+
+<style lang="scss">
+body {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0;
 }
 </style>
