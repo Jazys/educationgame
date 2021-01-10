@@ -10,11 +10,11 @@
 
 
 <script>
-import io from 'socket.io-client';
+import socket from '@/singleton/socket'
 //import serialPort from 'serialport'; // https://github.com/CaiBaoHong/serial-port-gui
 //https://web.dev/serial/
 //npm install --global --production windows-build-tools
-const sp = require('serialport')
+//const sp = require('serialport')
 
         
 export default {
@@ -24,18 +24,17 @@ export default {
       downloaded: false,
       gameInstance: null,
       containerId: 'game-container',
-      socket : io('localhost:5030',)
     }
   },
   async mounted() {
 
-    sp.list(function (error, ports) {
+    /*sp.list(function (error, ports) {
         if (error) {
           console.log(error)
         } else {
           console.log(ports)
         }
-      })
+      })*/
 
     if ("serial" in navigator) {
       // The Serial API is supported.
@@ -68,12 +67,12 @@ export default {
 
     })*/
 
-    this.socket.on('reply', (data) => {
+    socket.on('reply', (data) => {
             console.log('socket io message '+ data)
             // you can also do this.messages.push(data)
         });
 
-  this.socket.emit('message', {
+    socket.emit('message', {
                 user: 'tt', 
                 message: 'this.message'
             })

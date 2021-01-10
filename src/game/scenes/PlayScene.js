@@ -1,4 +1,5 @@
 import { Scene } from 'phaser'
+import socket from '@/singleton/socket'
 
 
 export default class PlayScene extends Scene {
@@ -22,6 +23,11 @@ export default class PlayScene extends Scene {
     })
 
     this.registry.events.on('ATTACK',this.doAttack.bind(this));
+
+    socket.on('reply', (data) => {
+      console.log('socket io message in game '+ data)
+      // you can also do this.messages.push(data)
+    });
 
     //var self=this;
     setInterval(function() {
