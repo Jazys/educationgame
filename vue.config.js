@@ -2,14 +2,11 @@ module.exports = {
   "transpileDependencies": [
     "vuetify"
   ],
-  configureWebpack: {
-    devtool: "source-map"
+
+  "configureWebpack": {
+    "devtool": "source-map"
   },
-  pluginOptions: {
-    electronBuilder: {
-      externals: ['serialport']
-    }
-  },
+
   chainWebpack: config => {
     /* disable insertion of assets as data urls b/c Phaser doesn't support it */
     const rules = [
@@ -29,7 +26,23 @@ module.exports = {
           })
     })
   },
-  devServer: {
-    open: true,
+
+  "devServer": {
+    "open": true
+  },
+
+  publicPath: '',
+
+  pluginOptions: {
+    electronBuilder: {
+      externals: [
+        'serialport'
+      ],
+      nodeModulesPath: [
+        '../../node_modules',
+        './node_modules'
+      ]
+    },
+    cordovaPath: 'src-cordova'
   }
 }

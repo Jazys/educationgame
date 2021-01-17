@@ -26,6 +26,7 @@ function launch(containerId, store) {
     game.registry.events.store = store
   
     // if there is no pre-existing game state, initialize it
+    /* eslint-disable no-console */
     console.log(store.state.count)
     if (!store.state.count) {
       event.store.commit('increment', {

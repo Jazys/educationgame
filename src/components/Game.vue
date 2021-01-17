@@ -11,7 +11,7 @@
 
 <script>
 import socket from '@/singleton/socket'
-//import serialPort from 'serialport'; // https://github.com/CaiBaoHong/serial-port-gui
+//import sp from 'serialport'; // https://github.com/CaiBaoHong/serial-port-gui
 //https://web.dev/serial/
 //npm install --global --production windows-build-tools
 //const sp = require('serialport')
@@ -28,17 +28,21 @@ export default {
   },
   async mounted() {
 
-    /*sp.list(function (error, ports) {
-        if (error) {
-          console.log(error)
-        } else {
-          console.log(ports)
-        }
-      })*/
+    let toto=true;
 
-    if ("serial" in navigator) {
-      // The Serial API is supported.
-      console.log("cool")
+    if (toto)
+    {
+      //import sp from 'serialport';
+      const sp = await import('serialport')
+      sp.list(function (error, ports) {
+          if (error) {
+            /* eslint-disable no-console */
+            console.log(error)
+          } else {
+            /* eslint-disable no-console */
+            console.log(ports)
+          }
+        })
     }
 
     //const ports = await navigator.serial.getPorts();
@@ -68,6 +72,7 @@ export default {
     })*/
 
     socket.on('reply', (data) => {
+            /* eslint-disable no-console */
             console.log('socket io message '+ data)
             // you can also do this.messages.push(data)
         });
