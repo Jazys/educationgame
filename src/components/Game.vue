@@ -11,6 +11,7 @@
 
 <script>
 import socket from '@/singleton/socket'
+import {selectPort, init , listPort} from '@/singleton/serial'
 //import sp from 'serialport'; // https://github.com/CaiBaoHong/serial-port-gui
 //https://web.dev/serial/
 //npm install --global --production windows-build-tools
@@ -31,18 +32,12 @@ export default {
     let toto=true;
 
     if (toto)
-    {
-      //import sp from 'serialport';
-      const sp = await import('serialport')
-      sp.list(function (error, ports) {
-          if (error) {
-            /* eslint-disable no-console */
-            console.log(error)
-          } else {
-            /* eslint-disable no-console */
-            console.log(ports)
-          }
-        })
+    {       
+      let titi = await listPort()
+      console.log(titi)
+      selectPort('COM10')
+      init()
+
     }
 
     //const ports = await navigator.serial.getPorts();
