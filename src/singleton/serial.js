@@ -4,17 +4,20 @@ let port= null
 
 export async function listPort()
 {
-    const sp = await import('serialport')
-       
-    sp.list(function (error, ports) {
-        if (error) {
-          /* eslint-disable no-console */
-          return error
-        } else {
-          /* eslint-disable no-console */
-          return ports   
-        }
+
+    return new Promise(function(resolve, reject) {
+        const sp = require('serialport')
+        sp.list(function (error, ports) {
+            if (error) {
+              /* eslint-disable no-console */
+              return reject(error)
+            } else {
+              /* eslint-disable no-console */
+              return resolve(ports)  
+            }
+          })
       })
+   
 }
 
 
