@@ -1,5 +1,3 @@
-const SerialPort = require('serialport')
-
 let port= null
 
 export async function listPort()
@@ -23,6 +21,7 @@ export async function listPort()
 
 export function selectPort(comPort)
 {
+    const SerialPort = require('serialport')
     port=new SerialPort(comPort, {
         baudRate: 9600
       })
@@ -50,8 +49,4 @@ port.on('error', function(err) {
       console.log('Data:', port.read())
   })
 }
-
-
-
-
 export default port;

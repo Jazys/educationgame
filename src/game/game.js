@@ -4,17 +4,19 @@ import PlayScene from './scenes/PlayScene'
 import event from './events'
 
 
-function launch(containerId, store) {
+function launch(containerId, store, heigthGame, widthGame) {
+
+  console.log(heigthGame +":"+ widthGame)
   const game =  new Phaser.Game({
     type: Phaser.AUTO,
-    width: 800,
-    height: 600,
-    parent: containerId,
+    parent: containerId,      
+    width: widthGame,
+    height: heigthGame,            
     physics: {
       default: 'arcade',
       arcade: {
         gravity: { y: 300 },
-        debug: false
+        debug: true
       }
     },
     scene: [BootScene, PlayScene],  

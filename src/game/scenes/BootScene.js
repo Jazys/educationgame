@@ -1,5 +1,5 @@
 import { Scene } from 'phaser'
-import sky from '@/game/assets/sky.png'
+import sky from '@/game/assets/sky2.png'
 import bomb from '@/game/assets/bomb.png'
 import ground from '@/game/assets/platform.png'
 import star from '@/game/assets/star.png'

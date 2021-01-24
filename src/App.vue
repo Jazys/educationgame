@@ -21,3 +21,12 @@ export default {
   }),
 };
 </script>
+<style>
+
+  html {
+  overflow: hidden !important;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  overflow-y: auto ;
+}
+</style>
