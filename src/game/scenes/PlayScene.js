@@ -1,5 +1,5 @@
 import { Scene, Math } from 'phaser'
-import socket from '@/singleton/socket'
+//import socket from '@/singleton/socket'
 
 var platforms;
 var player;
@@ -57,48 +57,41 @@ export default class PlayScene extends Scene {
     console.log(this.sys.game.canvas.width);
     //console.log(this.cameras);
     console.log(this.cameras.cameras[0].centerX +" "+this.cameras.cameras[0].centerY);
+      
+    this.setMap();
+    this.setCamera();     
+    
+    this.setAnimation()
+    this.setCollisions();
+    this.regsiterEvents();    
 
     
 
-    //this.add.image(this.sys.game.canvas.width/2, this.sys.game.canvas.height/2, 'sky');
-    //this.add.image(0, 0, 'sky');
-    background=this.add.tileSprite(this.sys.game.canvas.width/2,this.sys.game.canvas.height/2,0,0,'sky').setScrollFactor(0);
+  }
 
+  setMap()
+  {
+    //le setScrollFactor(0) permet de scroller le monde 
+    background=this.add.tileSprite(this.sys.game.canvas.width/2,this.sys.game.canvas.height/2,0,0,'sky').setScrollFactor(0);
     scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' });
 
     platforms = this.physics.add.staticGroup();
     cursors = this.input.keyboard.createCursorKeys();
+
+    //ajout du joueur
     player = this.physics.add.sprite(100, 450, 'dude').setInteractive().setOrigin(1,0);
 
     bombs = this.physics.add.group();
-    //this.cameras.main.setBounds(0, 0, 720 * 2, 176);
-    //this.cameras.main.setBounds(0, 0, 1600, 400);
 
-      
+    //pour spécifier les collisions avec le monde 
+    this.physics.world.setBoundsCollision(true, false, false, false);  
 
+    //pour spécifier les collisions monde/player et de son animation dans le monde
+    player.setCollideWorldBounds(true);
+    player.onWorldBounds = true;
+    player.setBounce(0.2);
 
-    //on se fixe sur le joueur
-    this.cameras.main.startFollow(player);
-    this.cameras.main.setBounds(0,0,Number.MAX_SAFE_INTEGER,0);
-    
-
-
-    //var self=this;
-
-  this.input.on('pointerdown', function(){
-
-    player.setVelocityX(300);
-    player.setVelocityY(-530);
-    player.anims.play('right', true);
-    //self.scale.startFullscreen();
-    // ...
- });
-
-
-    this.physics.add.collider(bombs, platforms);
-
-    this.physics.add.collider(player, bombs, this.hitBomb, null, this);
-
+    //création des plateformes
     platforms.create(40, 568, 'ground').setScale(2).refreshBody();
 
     platforms.create(600, 400, 'ground');
@@ -107,14 +100,46 @@ export default class PlayScene extends Scene {
 
     platforms.create(600, -100, 'ground');  
 
-    //pour spécifier les collisions avec le monde 
-    this.physics.world.setBoundsCollision(true, false, false, false);  
-    player.setCollideWorldBounds(true);
-    player.onWorldBounds = true;
-
-    player.setBounce(0.2);
+    //emplacement des étoiles
+    stars = this.physics.add.group({
+        key: 'star',
+        repeat: 11,
+        setXY: { x: 12, y: 0, stepX: 70 }
+    });
     
+    stars.children.iterate(function (child) {
+    
+        child.setBounceY(Math.FloatBetween(0.4, 0.8));
+    
+    });    
+  }
 
+  setCollisions()
+  {
+    this.physics.add.collider(player, platforms);  
+    this.physics.add.collider(bombs, platforms);    
+    this.physics.add.collider(stars, platforms);
+    this.physics.add.overlap(player, stars, this.collectStar, null, this);
+    this.physics.add.collider(player, bombs, this.hitBomb, null, this);
+  }
+
+  setCamera()
+  {
+    //on se fixe sur le joueur
+    this.cameras.main.startFollow(player);
+    this.cameras.main.setBounds(0,0,Number.MAX_SAFE_INTEGER,0);
+  }
+
+  regsiterEvents()
+  {
+    this.registry.events.on('ATTACK',this.doAttack.bind(this));
+    this.registry.events.on('MOVE',this.doMove.bind(this));
+  }
+
+ 
+
+  setAnimation()
+  {
     this.anims.create({
         key: 'left',
         frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 3 }),
@@ -134,41 +159,6 @@ export default class PlayScene extends Scene {
         frameRate: 20,
         repeat: -1
     });
-
-    this.physics.add.collider(player, platforms);
-
-   
-
-    stars = this.physics.add.group({
-        key: 'star',
-        repeat: 11,
-        setXY: { x: 12, y: 0, stepX: 70 }
-    });
-    
-    stars.children.iterate(function (child) {
-    
-        child.setBounceY(Math.FloatBetween(0.4, 0.8));
-    
-    });
-
-    this.physics.add.collider(stars, platforms);
-
-    this.physics.add.overlap(player, stars, this.collectStar, null, this);
-
-    this.registry.events.on('ATTACK',this.doAttack.bind(this));
-    this.registry.events.on('MOVE',this.doMove.bind(this));
-
-    socket.on('reply', (data) => {
-      /* eslint-disable no-console */
-      console.log('socket io message in game '+ data)
-      // you can also do this.messages.push(data)
-    });
-
-    //var self=this;
-    setInterval(function() {
-      //console.log( "game "+self.registry.events.store.state.count)
-                   }, 20);
-
   }
 
   doMove(type_move)
@@ -187,13 +177,7 @@ export default class PlayScene extends Scene {
     
     }
   }
-
-  actionOnClick()
-  {
-    console.log("ttoto")
-    player.setVelocityX(300);  
-    player.anims.play('right', true);
-  }
+ 
 
   update () {    
 
@@ -238,9 +222,11 @@ export default class PlayScene extends Scene {
         player.setVelocityY(-530);
         background.tilePositionY=background.tilePositionY+10       
     }
- 
+    
+    //Ce qui permet de suivre le joueur sur le plan y
     this.cameras.main.setBounds(0,player.y-this.sys.game.canvas.height+100,Number.MAX_SAFE_INTEGER,0);
     /*
+    //Permet de bouger la camera
     var scrol_x = player.x - 800;    
     var scrol_y = player.y - 300;    
 
@@ -248,12 +234,14 @@ export default class PlayScene extends Scene {
      this.cameras.main.scrollY = scrol_y; */
   }
 
+  //Pour la réception d'un évènements depuis l'exterieur vers le jeu
   doAttack(parameter)
   {
     /* eslint-disable no-console */
     console.log('you attacked the '+parameter.monster+' with a '+parameter.weapon);
   }
 
+  //Pour la gestion des collisions avec les étoiles
   collectStar (player, star)
   {
       star.disableBody(true, true);
@@ -279,14 +267,12 @@ export default class PlayScene extends Scene {
       }
   }
 
+  //pour la gestion des collisions avec la bombe
   hitBomb (player)
   {
       //this.physics.pause();
-
       player.setTint(0xff0000);
-
       player.anims.play('turn');
-
       //gameOver = true;
   }
 
@@ -302,6 +288,27 @@ export default class PlayScene extends Scene {
     } else {
         canvas.style.width = (height * ratio) + "px";
         canvas.style.height = height + "px";
-    }
-}
+    }    
+  }
+
+  actionOnClick()
+  {
+    console.log("ttoto")
+    player.setVelocityX(300);  
+    player.anims.play('right', true);
+  }
+
+  setOnClickGame()
+  {
+    //quand on clique sur l'écran
+    this.input.on('pointerdown', function(){
+        player.setVelocityX(300);
+        player.setVelocityY(-530);
+        player.anims.play('right', true);
+
+        //passage en fullscreen
+        //self.scale.startFullscreen();
+        
+    });
+  }
 }

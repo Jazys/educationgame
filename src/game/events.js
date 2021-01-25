@@ -1,6 +1,8 @@
+//Pour la gestion des évènements sous phaser
 const { Events } = require('phaser')
 const events = new Events.EventEmitter()
 
+//réception d'un évènement de phaser vers vueJS, en l'occurence le store
 events.on('bounce', () => {
   let value = events.store.count;
   value++

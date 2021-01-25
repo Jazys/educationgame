@@ -12,12 +12,12 @@
       </button>
       </div>
       <div class="move_left">
-      <button class="buttonAction" @mousedown="move('left_down')" @mouseup="move('left_up')" @touchstart="move('left_down')" @touchend="move('left_down')">
+      <button class="buttonAction" @mousedown="move('left_down')" @mouseup="move('left_up')" @touchstart="touch_move('left_down')" @touchend="touch_move('left_down')">
         Gauche
       </button>
       </div>
       <div class="move_right">
-      <button class="buttonAction" @mousedown="move('right_down')" @mouseup="move('right_up')" @touchstart="move('right_down')" @touchend="move('right_down')">
+      <button class="buttonAction" @mousedown="move('right_down')" @mouseup="move('right_up')" @touchstart="touch_move('right_down')" @touchend="touch_move('right_down')">
         Droite
       </button>
       </div>
@@ -67,7 +67,7 @@ export default {
       this.gameScreenHeight=window.innerHeight-(window.innerHeight/15)
     }
     
-
+    //Pour la gestion du port serie
     if (this.useElectronWithSerialPort)
     {             
       let allSerailPort = await listPort()
@@ -77,6 +77,7 @@ export default {
 
     }
 
+    //Pour charger le jeu
     const game = await import(/* webpackChunkName: "game" */ '@/game/game')
     this.downloaded = true  
     this.$nextTick(() => {
@@ -84,27 +85,31 @@ export default {
     })
 
 
-
+    //Socket IO pour l'un message provenant du serveur
     socket.on('reply', (data) => {
             /* eslint-disable no-console */
             console.log('socket io message '+ data)
-            // you can also do this.messages.push(data)
+            
+            //Emission d'un event dans le jeu
+            //self.gameInstance.registry.events.emit('ATTAK',{weapon:'sword',strength:5,monster:'pet'})
         });
 
+    //Pour émettre un message
     socket.emit('message', {
                 user: 'tt', 
                 message: 'this.message'
-            })
-
-    var self=this;
-    setInterval(function() {
-                        //console.log(self.$store.state.count)
-                        self.gameInstance.registry.events.emit('ATTAK',{weapon:'sword',strength:5,monster:'pet'})
-                   }, 1000);
+            }) 
 
   },
    methods: {
     move: function (type_move) {      
+
+      if(this.gameIsLaunchInMobile==false)
+       this.gameInstance.registry.events.emit('MOVE',type_move)   
+    },
+
+    touch_move: function (type_move) {      
+      if(this.gameIsLaunchInMobile)
        this.gameInstance.registry.events.emit('MOVE',type_move)   
     }
   },
@@ -155,10 +160,10 @@ export default {
   letter-spacing: 0.0892857143em;
   justify-content: center;
   text-indent: 0.0892857143em;
-    text-transform: uppercase;
-        user-select: none;
-    vertical-align: middle;
-    white-space: nowrap;
+  text-transform: uppercase;
+  user-select: none;
+  vertical-align: middle;
+  white-space: nowrap;
   outline: none;
   color: #fff;
   background-color: #4c54af;
