@@ -28,9 +28,9 @@
 
 
 <script>
-import socket from '@/singleton/socket'
 import {selectPort, init , listPort} from '@/singleton/serial'
 import { isMobile } from 'mobile-device-detect';
+import socket from '@/singleton/socket'
 
 
         
@@ -85,32 +85,65 @@ export default {
     })
 
 
-    //Socket IO pour l'un message provenant du serveur
-    socket.on('reply', (data) => {
-            /* eslint-disable no-console */
-            console.log('socket io message '+ data)
-            
-            //Emission d'un event dans le jeu
-            //self.gameInstance.registry.events.emit('ATTAK',{weapon:'sword',strength:5,monster:'pet'})
-        });
+    socket.onerror = function() {
+        console.log('Connection Error');
+    };
 
-    //Pour émettre un message
-    socket.emit('message', {
-                user: 'tt', 
-                message: 'this.message'
-            }) 
+    socket.onopen = function() {
+        console.log('WebSocket Client Connected');
+
+        /*function sendNumber() {
+            if (client.readyState === client.OPEN) {
+                var number = Math.round(Math.random() * 0xFFFFFF);
+                client.send(number.toString());
+                setTimeout(sendNumber, 1000);
+            }
+        }
+        sendNumber();*/
+    };
+
+    socket.onclose = function() {
+        console.log('echo-protocol Client Closed');
+    };  
+
+    var self=this;
+
+    socket.onmessage = function(e) {
+        if (typeof e.data === 'string') {
+            console.log("Received: '" + e.data + "'");
+            self.gameInstance.registry.events.emit('MOVE',e.data)   
+        }
+    };
+
+
+
+
 
   },
    methods: {
     move: function (type_move) {      
 
       if(this.gameIsLaunchInMobile==false)
-       this.gameInstance.registry.events.emit('MOVE',type_move)   
+       this.gameInstance.registry.events.emit('MOVE',type_move)  
+
+       if(type_move=='right_up')
+       {
+      this.gameInstance.scene.sleep("DungeonScene") 
+      this.gameInstance.scene.start("PlayScene") 
+       }
+
+       if(type_move=='left_up')
+       {
+      this.gameInstance.scene.stop("PlayScene") 
+      this.gameInstance.scene.wake("DungeonScene") 
+       }
     },
 
     touch_move: function (type_move) {      
       if(this.gameIsLaunchInMobile)
        this.gameInstance.registry.events.emit('MOVE',type_move)   
+       this.gameInstance.scene.sleep("PlayScene") 
+       this.gameInstance.scene.switch("DungeonScene")
     }
   },
   destroyed() {

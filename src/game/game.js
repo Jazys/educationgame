@@ -1,6 +1,9 @@
 import Phaser from 'phaser'
 import BootScene from './scenes/BootScene'
 import PlayScene from './scenes/PlayScene'
+//import DungeonScene from "./scenes/dungeon-scene.js";
+//import {BootSceneRPG,WorldScene} from './scenes/rpg/world'
+//import {BattleScene, UIScene} from './scenes/rpg/battle'
 import event from './events'
 
 
@@ -11,7 +14,8 @@ function launch(containerId, store, heigthGame, widthGame) {
     type: Phaser.AUTO,
     parent: containerId,      
     width: widthGame,
-    height: heigthGame,            
+    height: heigthGame,    
+    pixelArt: true,        
     physics: {
       default: 'arcade',
       arcade: {
@@ -19,7 +23,9 @@ function launch(containerId, store, heigthGame, widthGame) {
         debug: true
       }
     },
-    scene: [BootScene, PlayScene],  
+    scene: [BootScene, PlayScene],
+   // scene: [BootScene, PlayScene, DungeonScene, BootSceneRPG, WorldScene, BattleScene, UIScene],  
+   //scene: [BootSceneRPG, WorldScene, BattleScene,UIScene,BootScene, PlayScene, DungeonScene], 
   })
 
   game.registry.events = event
