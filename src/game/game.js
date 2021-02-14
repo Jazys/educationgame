@@ -1,11 +1,16 @@
 import Phaser from 'phaser'
 import BootScene from './scenes/BootScene'
 import PlayScene from './scenes/PlayScene'
-//import DungeonScene from "./scenes/dungeon-scene.js";
-//import {BootSceneRPG,WorldScene} from './scenes/rpg/world'
-//import {BattleScene, UIScene} from './scenes/rpg/battle'
+import DungeonScene from "./scenes/dungeon-scene.js";
+import {BootSceneRPG,WorldScene} from './scenes/rpg/world'
+import {BattleScene, UIScene} from './scenes/rpg/battle'
 import event from './events'
 
+//https://github.com/StackAbuse/creating-a-platformer-with-phaser-3
+// un rpg https://phaser.discourse.group/t/wip-my-first-game-a-phaser-3-dungeon-crawler-rpg/8681
+// 
+// https://github.com/B3L7/phaser3-tilemap-pack  ==> interessant
+// https://github.com/OlawaleJoseph/RPG-GAME/tree/develop/src/scenes
 
 function launch(containerId, store, heigthGame, widthGame) {
 
@@ -19,12 +24,12 @@ function launch(containerId, store, heigthGame, widthGame) {
     physics: {
       default: 'arcade',
       arcade: {
-        gravity: { y: 300 },
+        gravity: { y: 0 },
         debug: true
       }
     },
-    scene: [BootScene, PlayScene],
-   // scene: [BootScene, PlayScene, DungeonScene, BootSceneRPG, WorldScene, BattleScene, UIScene],  
+    //scene: [BootScene, PlayScene],
+   scene: [BootScene, PlayScene, DungeonScene, BootSceneRPG, WorldScene, BattleScene, UIScene],  
    //scene: [BootSceneRPG, WorldScene, BattleScene,UIScene,BootScene, PlayScene, DungeonScene], 
   })
 

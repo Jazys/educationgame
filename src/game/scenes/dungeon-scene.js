@@ -1,5 +1,8 @@
-import { Scene, Input } from 'phaser'
+import { Scene, Input, Utils, Phaser } from 'phaser'
 import Dungeon from "@mikewesthad/dungeon";
+import TILES from "./tile-mapping.js";
+
+var map=null ;
 
 /**
  * Scene that generates a new dungeon
@@ -17,31 +20,146 @@ export default class DungeonScene extends Scene {
 
   create() {
     // Generate a random world
-    const dungeon = new Dungeon({ 
+    this.dungeon = new Dungeon({ 
       width: 50,
       height: 50,
       rooms: {
         width: { min: 7, max: 15 },
         height: { min: 7, max: 15 },
-        maxRooms: 12
+        maxRooms: 2
       }
     });
 
     // Create a blank tilemap with dimensions matching the dungeon
-    const map = this.make.tilemap({
+    map= this.make.tilemap({
       tileWidth: 48,
       tileHeight: 48,
-      width: dungeon.width,
-      height: dungeon.height
+      width: this.dungeon.width,
+      height: this.dungeon.height
     });
-    const tileset = map.addTilesetImage("tiles", null, 48, 48, 1, 2); // 1px margin, 2px spacing
+    /*const tileset = map.addTilesetImage("tiles", null, 48, 48, 1, 2); // 1px margin, 2px spacing
     const layer = map.createBlankDynamicLayer("Layer 1", tileset);
 
     // Get a 2D array of tile indices (using -1 to not render empty tiles) and place them into the
     // blank layer
     const mappedTiles = dungeon.getMappedTiles({ empty: -1, floor: 6, door: 6, wall: 20 });
     layer.putTilesAt(mappedTiles, 0, 0);
-    layer.setCollision(20); // We only need one tile index (the walls) to be colliding for now
+    layer.setCollision(20); // We only need one tile index (the walls) to be colliding for now*/
+
+    
+
+    const tileset = map.addTilesetImage("tiles", null, 48, 48, 1, 2); // 1px margin, 2px spacing
+    this.groundLayer = map.createBlankDynamicLayer("Ground", tileset);
+    this.stuffLayer = map.createBlankDynamicLayer("Stuff", tileset);
+
+    this.groundLayer.fill(TILES.BLANK);
+
+    console.log(map)
+
+    /*map.findObject('Ground', function(object) {
+
+      console.log(object.type);
+
+  }, this);*/
+
+  var bombs = this.physics.add.group();
+
+    // Use the array of rooms generated to place tiles in the map
+    // Note: using an arrow function here so that "this" still refers to our scene
+    this.dungeon.rooms.forEach(room => {
+      const { x, y, width, height, left, right, top, bottom } = room;
+
+      bombs.create(48*x +5*48, 48*y+5*48, 'bomb');
+
+      // Fill the floor with mostly clean tiles
+      this.groundLayer.weightedRandomize(x + 1, y + 1, width - 2, height - 2, TILES.FLOOR);
+
+      // Place the room corners tiles
+      this.groundLayer.putTileAt(TILES.WALL.TOP_LEFT, left, top);
+      this.groundLayer.putTileAt(TILES.WALL.TOP_RIGHT, right, top);
+      this.groundLayer.putTileAt(TILES.WALL.BOTTOM_RIGHT, right, bottom);
+      this.groundLayer.putTileAt(TILES.WALL.BOTTOM_LEFT, left, bottom);
+
+      // Fill the walls with mostly clean tiles
+      this.groundLayer.weightedRandomize(left + 1, top, width - 2, 1, TILES.WALL.TOP);
+      this.groundLayer.weightedRandomize(left + 1, bottom, width - 2, 1, TILES.WALL.BOTTOM);
+      this.groundLayer.weightedRandomize(left, top + 1, 1, height - 2, TILES.WALL.LEFT);
+      this.groundLayer.weightedRandomize(right, top + 1, 1, height - 2, TILES.WALL.RIGHT);
+
+      // Dungeons have rooms that are connected with doors. Each door has an x & y relative to the
+      // room's location. Each direction has a different door to tile mapping.
+      var doors = room.getDoorLocations(); // → Returns an array of {x, y} objects
+      for (var i = 0; i < doors.length; i++) {
+        if (doors[i].y === 0) {
+          this.groundLayer.putTilesAt(TILES.DOOR.TOP, x + doors[i].x - 1, y + doors[i].y);
+        } else if (doors[i].y === room.height - 1) {
+          this.groundLayer.putTilesAt(TILES.DOOR.BOTTOM, x + doors[i].x - 1, y + doors[i].y);
+        } else if (doors[i].x === 0) {
+          this.groundLayer.putTilesAt(TILES.DOOR.LEFT, x + doors[i].x, y + doors[i].y - 1);
+        } else if (doors[i].x === room.width - 1) {
+          this.groundLayer.putTilesAt(TILES.DOOR.RIGHT, x + doors[i].x, y + doors[i].y - 1);
+        }
+      }
+    });
+
+    // Not exactly correct for the tileset since there are more possible floor tiles, but this will
+    // do for the example.
+    this.groundLayer.setCollisionByExclusion([-1, 6, 7, 8, 26]);
+
+    console.log(this.dungeon.rooms);
+
+    const rooms = this.dungeon.rooms.slice();
+    //const startRoom = rooms.shift();
+    const endRoom = Utils.Array.RemoveRandomElement(rooms);
+    const otherRooms = Utils.Array.Shuffle(rooms).slice(0, rooms.length * 0.9);
+
+    // Place the stairs
+    this.stuffLayer.putTileAt(TILES.STAIRS, endRoom.centerX, endRoom.centerY);
+
+  
+
+    // Place stuff in the 90% "otherRooms"
+    otherRooms.forEach(room => {
+      var rand = 0.25;
+      console.log(room)
+      if (rand <= 0.25) {
+        // 25% chance of chest
+        this.stuffLayer.putTileAt(TILES.CHEST, room.centerX, room.centerY);
+        
+        bombs.create(600, 700, 'bomb');
+      } else if (rand <= 0.5) {
+        // 50% chance of a pot anywhere in the room... except don't block a door!
+        const x = Phaser.Math.Between(room.left + 2, room.right - 2);
+        const y = Phaser.Math.Between(room.top + 2, room.bottom - 2);
+        this.stuffLayer.weightedRandomize(x, y, 1, 1, TILES.POT);
+      } else {
+        // 25% of either 2 or 4 towers, depending on the room size
+        if (room.height >= 9) {
+          this.stuffLayer.putTilesAt(TILES.TOWER, room.centerX - 1, room.centerY + 1);
+          this.stuffLayer.putTilesAt(TILES.TOWER, room.centerX + 1, room.centerY + 1);
+          this.stuffLayer.putTilesAt(TILES.TOWER, room.centerX - 1, room.centerY - 2);
+          this.stuffLayer.putTilesAt(TILES.TOWER, room.centerX + 1, room.centerY - 2);
+        } else {
+          this.stuffLayer.putTilesAt(TILES.TOWER, room.centerX - 1, room.centerY - 1);
+          this.stuffLayer.putTilesAt(TILES.TOWER, room.centerX + 1, room.centerY - 1);
+        }
+      }
+    });
+
+    this.stuffLayer.setCollisionByExclusion([-1, 6, 7, 8, 26]);
+
+
+    this.dungeon.drawToConsole({
+      empty: " ",
+      emptyAttributes: "rgb(0, 0, 0)",
+      wall: "#",
+      wallAttributes: "rgb(255, 0, 0)",
+      floor: "0",
+      floorAttributes: "rgb(210, 210, 210)",
+      door: "x",
+      doorAttributes: "rgb(0, 0, 255)",
+      containerAttributes: "15px"
+    });
 
     this.anims.create({
       key: "player-walk",
@@ -98,7 +216,8 @@ export default class DungeonScene extends Scene {
     this.container.body.setCollideWorldBounds(true);
     
     // pour indiquer les collisions avec les murs
-    this.physics.add.collider(this.container, layer);
+    this.physics.add.collider(this.container, this.groundLayer);
+    this.physics.add.collider(this.container, this.stuffLayer);
 
     //met des monstre étoiles
     this.stars = this.physics.add.group({
@@ -126,6 +245,7 @@ export default class DungeonScene extends Scene {
   touchEnemy()
   {
     console.log("hurt me");
+    this.testMessageBox();
   }
 
   update() {
@@ -208,6 +328,7 @@ export default class DungeonScene extends Scene {
     //Pour faire bouger l'épée si espace est appué
     if (Input.Keyboard.JustDown(keys.space) && !this.attacking) {
       this.attacking = true;
+      this.showMessageBox('youyyu ');
       setTimeout(() => {
         this.attacking = false;
         this.weapon.angle = 0;
@@ -239,4 +360,87 @@ export default class DungeonScene extends Scene {
       else this.player.setTexture("characters", 46);
     }
   }
+
+  testMessageBox() {
+    //call this line of code when you want to show the message box
+    //message, width and height
+    this.showMessageBox("HELLO THERE! Put Some Text Here!", 300, 300);
+}
+  //
+  //w=width
+  //h=height
+  //
+  showMessageBox(text, w = 100, h = 100) {
+      //just in case the message box already exists
+      //destroy it
+      console.log("test");
+      if (this.msgBox) {
+          this.msgBox.destroy();
+      }
+      //make a group to hold all the elements
+      var msgBox = this.add.container(this.container.x, this.container.y)
+      //make the back of the message box
+      var back = this.add.sprite(0,0, "characters");
+      //make the close button
+      var closeButton = this.add.sprite(0,0, "sword");
+      //make a text field
+      var text1 = this.add.text(0,0, text);
+      //set the textfeild to wrap if the text is too long
+      text1.wordWrap = true;
+      //make the width of the wrap 90% of the width 
+      //of the message box
+      text1.wordWrapWidth = w * .9;
+      //
+      //
+      //set the width and height passed
+      //in the parameters
+      back.width = w;
+      back.height = h;
+      //
+      //
+      //
+      //add the elements to the group
+      msgBox.add(back);
+      msgBox.add(closeButton);
+      msgBox.add(text1);
+      //
+      //set the close button
+      //in the center horizontally
+      //and near the bottom of the box vertically
+      closeButton.x = back.width / 2 - closeButton.width / 2;
+      closeButton.y = back.height - closeButton.height;
+      //enable the button for input
+      closeButton.inputEnabled = true;
+      //add a listener to destroy the box when the button is pressed
+      //closeButton.events.onInputDown.add(this.hideBox, this);
+      //
+      //
+      //set the message box in the center of the screen
+      console.log(this.container.x+":"+this.container.y);
+      
+      //set the text in the middle of the message box
+      text1.x = back.width / 2 - text1.width / 2;
+      text1.y = back.height / 2 - text1.height / 2;
+      //make a state reference to the messsage box
+      this.msgBox = msgBox;
+      this.container.body.moves = false;
+
+      //permet de supprimer l'association des touches
+      this.input.keyboard.removeAllKeys();
+
+      //pour les touches http://labs.phaser.io/edit.html?src=src/input/keyboard/retro%20leaderboard.js
+
+      //this.keys = this.input.keyboard.createCursorKeys();
+
+     // var key3 = this.input.keyboard.addKey(Input.Keyboard.left);
+      this.input.keyboard.on('keyup', this.testKeyboardLeft, this);
+  }
+  hideBox() {
+      //destroy the box when the button is pressed
+      this.msgBox.destroy();
+  }
+
+  testKeyboardLeft () {
+    console.log("test")
+}
 }
