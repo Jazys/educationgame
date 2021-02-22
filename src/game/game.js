@@ -42,7 +42,7 @@ function launch(containerId, store, heigthGame, widthGame) {
     /* eslint-disable no-console */
     console.log(store.state.count)
     if (!store.state.count) {
-      event.store.commit('increment', {
+      event.store.commit('initMessageBox', {
         gameName: 'exampleGame',
         prop: 'bounces',
         value: 0

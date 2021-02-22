@@ -5,7 +5,7 @@
     <div class="placeholder" v-else>
       Downloading ...
     </div> 
-   <div class="controller">
+   <div class="controller" ref="toto">
      <div class="jump">
       <button class="buttonAction" v-on:click="move('jump')" >
         Sauter
@@ -22,6 +22,75 @@
       </button>
       </div>
    </div>
+
+   <v-dialog
+      v-model="dialog"
+      class="mx-auto "      
+      v-on:keyup="keymonitor" 
+      ref="test1"
+    >
+      <v-card>
+        <v-card-title class="headline" ref="test2">
+          Use Google's location service?
+        </v-card-title>
+
+        <v-card-text>
+          Let Google help apps determine location. This means sending anonymous location data to Google, even when no apps are running.
+
+          <v-row class="mx-auto"
+              no-gutters>
+            <v-col class="mx-auto" no-gutters  
+            md="6"
+              >
+                <v-btn
+                  color="green darken-1"
+                  text
+                  focus
+                  ref="supertest"
+                  @click="dialog = false"
+                >
+                Disagree
+              </v-btn>
+              <v-btn
+                color="green darken-1"
+                text
+                focus
+                ref="supertest"
+                @click="dialog = false"
+              >
+                Disagree
+              </v-btn>
+            </v-col>
+          </v-row>
+           <v-row class="mx-auto" 
+              no-gutters>
+          <v-col class="mx-auto" no-gutters
+            md="6">
+           <v-btn
+            color="green darken-1"
+            text
+            @click="dialog = false"
+          >
+            Agree
+          </v-btn>
+
+           <v-btn
+            color="green darken-1"
+            text
+            @click="dialog = false"
+          >
+            Agree
+          </v-btn>
+          </v-col>
+          
+          </v-row>  
+
+          
+        </v-card-text>
+        <v-card-actions>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </v-container>
 </template>
@@ -46,9 +115,47 @@ export default {
       gameScreenHeight: window.innerHeight-(window.innerHeight/10),
       gameScreenWidth: window.innerWidth,
       useElectronWithSerialPort:false,
+      dialog:false,
+    }
+  },
+  watch: {
+
+    '$store.state.msgBox.state': function() {
+      if( this.$store.state.msgBox.state)
+      {
+       
+        this.gameInstance.scene.pause(this.$store.state.msgBox.sceneName) 
+        this.dialog=true;
+        const self = this;
+        setTimeout(function () {
+          console.log(self.$refs.supertest);
+          self.$refs.supertest.$el.focus()
+        }, 100)
+      }      
+     
+     
+      console.log(this.$store.state.count)
+    },
+
+    'dialog': function() {
+      if( this.dialog==false)
+      {
+        this.gameInstance.scene.wake(this.$store.state.msgBox.sceneName);
+        this.$store.commit('disableMessageBox','');        
+      }      
+     
+     
+      console.log(this.$store.state.count)
     }
   },
   async mounted() {
+
+
+    console.log(this.$store.state)
+
+    console.log(this.$refs)
+
+   
 
     //Pour la gestion du menu du bas
     if( (window.innerHeight/10) < 30)
@@ -144,7 +251,15 @@ export default {
        this.gameInstance.registry.events.emit('MOVE',type_move)   
        this.gameInstance.scene.sleep("PlayScene") 
        this.gameInstance.scene.switch("DungeonScene")
-    }
+    },
+
+    keymonitor: function(event) {
+        console.log(event.key);
+       if(event.key == "Enter")
+       {
+         console.log("enter key was pressed!");
+       }
+    },
   },
   destroyed() {
     this.gameInstance.destroy(false)
