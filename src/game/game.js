@@ -15,9 +15,17 @@ import event from './events'
 //menu
 //https://phasertutorials.com/creating-a-phaser-3-template-part-3/
 
-function launch(containerId, store, heigthGame, widthGame) {
+//doc sur phaser 
+// https://github.com/samme/phaser3-faq/wiki#how-do-scenes-work
 
-  console.log(heigthGame +":"+ widthGame)
+function launch(containerId, store, heigthGame, widthGame, sceneStart) {
+
+  
+
+  //Par défaut, on démarre le donjon
+  let nameSceneStart='DungeonScene';
+
+  //Le jeu en lui même
   const game =  new Phaser.Game({
     type: Phaser.AUTO,
     parent: containerId,      
@@ -31,10 +39,22 @@ function launch(containerId, store, heigthGame, widthGame) {
         debug: true
       }
     },
-    //scene: [BootScene, PlayScene],
-   scene: [BootScene, PlayScene, DungeonScene, BootSceneRPG, WorldScene, BattleScene, UIScene],  
-   //scene: [BootSceneRPG, WorldScene, BattleScene,UIScene,BootScene, PlayScene, DungeonScene], 
   })
+
+  if(sceneStart!="")
+    nameSceneStart=sceneStart
+
+  console.log(heigthGame +":"+ widthGame+ ': '+nameSceneStart);
+
+  //Ajout de toutes les scenes possibles
+  game.scene.add("BootScene",BootScene,true, { startnamescene : nameSceneStart});
+  game.scene.add("PlayScene",PlayScene,false);
+  game.scene.add("DungeonScene",DungeonScene,false);
+  game.scene.add("BootSceneRPG",BootSceneRPG,false);
+  game.scene.add("WorldScene",WorldScene,false);
+  game.scene.add("BattleScene",BattleScene,false);
+  game.scene.add("UIScene",UIScene,false);
+
 
   game.registry.events = event
 

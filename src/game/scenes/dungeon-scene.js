@@ -12,7 +12,16 @@ var enableShowMessageBox=false;
  */
 export default class DungeonScene extends Scene {
   constructor () {
-    super({ key: 'DungeonScene' })
+    super({ key: 'DungeonScene' ,
+    height : window.innerHeight,
+    physics: {
+      default: 'arcade',
+      arcade: { 
+        gravity: { y: 0 }
+      }
+     }
+    });
+
     this.container=null;
     this.attacking=false;
     this.left=false;
@@ -20,7 +29,7 @@ export default class DungeonScene extends Scene {
     this.down=false;
     this.right=false;
     this.sceneName='DungeonScene';
-    this.touchChest=false;
+    this.touchChest=false;  
   }
 
   create() {
@@ -67,7 +76,7 @@ export default class DungeonScene extends Scene {
       rooms: {
         width: { min: 7, max: 15 },
         height: { min: 7, max: 15 },
-        maxRooms: 15
+        maxRooms: 2
       }
     });
 
@@ -354,9 +363,13 @@ export default class DungeonScene extends Scene {
           console.log(self.enemies);      
           console.log(self.coins); 
 
+          self.enemies.setActive(false);
+          self.coins.setActive(false);
           self.enemies.clear(true);
           self.coins.clear(true);
-      
+          self.enemies.destroy();
+          self.coins.destroy();
+               
           //suppression de player
           self.weapon.destroy();
           self.player.destroy();
@@ -374,10 +387,11 @@ export default class DungeonScene extends Scene {
           //suppression des animations
           self.anims.remove('player-walk');
           self.anims.remove('player-walk-back');
-          self.anims.remove('rotation');
+          self.anims.remove('rotate');
 
           //enleve les event
-          self.events.off();            
+          self.events.off();   
+          self.registry.destroy();         
           
           
           //self.physics.shutdown();  
@@ -387,6 +401,10 @@ export default class DungeonScene extends Scene {
 
           //recrée le niveau
           self.create();
+
+          
+          //console.log(self.Scene.debug);
+          //self.scene.remove('DungeonScene');
          
 
           //ou rafraichit le niveua entierement

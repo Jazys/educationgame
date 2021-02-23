@@ -17,7 +17,14 @@ var button;
 export default class PlayScene extends Scene {
   
   constructor () {
-    super({ key: 'PlayScene' })
+    super({ key: 'PlayScene' ,
+    physics: {
+      default: 'arcade',
+      arcade: { 
+        gravity: { y: 300 }
+      }
+     }
+    });
   }  
 
   create () {
@@ -273,6 +280,7 @@ export default class PlayScene extends Scene {
       //this.physics.pause();
       player.setTint(0xff0000);
       player.anims.play('turn');
+      this.scene.restart();
       //gameOver = true;
   }
 

@@ -1,11 +1,29 @@
 <template>
 <v-container class="pa-0 ma-0 mb-0">
-  <div class="grid-container" :style="`--height: ${gridRowGamenHeight}`">   
+  <div class="grid-container" :style="`--height: ${gridRowGamenHeight}`">  
+    <v-btn
+        color="green darken-1"
+        text
+        focus
+        ref="answer1"
+        @click="startGame('PlayScene')"
+      >
+      PlayScene
+    </v-btn>
+    <v-btn
+        color="green darken-1"
+        text
+        focus
+        ref="answer1"
+        @click="startGame('DungeonScene')"
+      >
+      DungeonScene
+    </v-btn> 
     <div class="game" :id="containerId" v-if="downloaded" />
     <div class="placeholder" v-else>
       Downloading ...
     </div> 
-   <div class="controller" ref="toto">
+   <div class="controller"  v-if="selectGame" >
      <div class="jump">
       <button class="buttonAction" v-on:click="move('jump')" >
         Sauter
@@ -110,7 +128,9 @@ export default {
     return {
       gameIsLaunchInMobile: isMobile,
       downloaded: false,
+      selectGame: false,
       gameInstance: null,
+      game:null,
       containerId: 'game-container',
       //gridRowGamenHeight:'100%',
       //gameScreenHeight: window.innerHeight-(window.innerHeight/10),
@@ -178,24 +198,7 @@ export default {
      
     }
   },
-  async mounted() {
-
-    //Pour la gestion du menu du bas
-    if( (window.innerHeight/10) < 30)
-    {
-      this.gridRowGamenHeight="75%"
-      this.gameScreenHeight=window.innerHeight-(window.innerHeight/30)
-    }
-    else if((window.innerHeight/10) < 40)
-    {
-      this.gridRowGamenHeight="80%"
-      this.gameScreenHeight=window.innerHeight-(window.innerHeight/20)
-    }
-    else if((window.innerHeight/10) < 50)
-    {
-      this.gridRowGamenHeight="85%"
-      this.gameScreenHeight=window.innerHeight-(window.innerHeight/15)
-    }
+  async mounted() {    
     
     //Pour la gestion du port serie
     if (this.useElectronWithSerialPort)
@@ -208,11 +211,11 @@ export default {
     }
 
     //Pour charger le jeu
-    const game = await import(/* webpackChunkName: "game" */ '@/game/game')
+    this.game = await import(/* webpackChunkName: "game" */ '@/game/game')
     this.downloaded = true  
-    this.$nextTick(() => {
-      this.gameInstance = game.launch(this.containerId, this.$store, this.gameScreenHeight,this.gameScreenWidth)
-    })
+    /*this.$nextTick(() => {
+      this.gameInstance = game.launch(this.containerId, this.$store, this.gameScreenHeight,this.gameScreenWidth, '')
+    })*/
 
 
     socket.onerror = function() {
@@ -247,7 +250,50 @@ export default {
 
   },
    methods: {
-     move: async function (type_move) {      
+
+
+     //Pour la gestion du menu du bas
+     resizeController: function ()
+     {        
+        if( (window.innerHeight/10) < 30)
+        {
+          this.gridRowGamenHeight="75%"
+          this.gameScreenHeight=window.innerHeight-(window.innerHeight/30)
+        }
+        else if((window.innerHeight/10) < 40)
+        {
+          this.gridRowGamenHeight="80%"
+          this.gameScreenHeight=window.innerHeight-(window.innerHeight/20)
+        }
+        else if((window.innerHeight/10) < 50)
+        {
+          this.gridRowGamenHeight="85%"
+          this.gameScreenHeight=window.innerHeight-(window.innerHeight/15)
+        }
+     },
+
+    //creation du jeu phaser
+    startGame: function(nameScene)
+    {
+      this.selectGame=true;
+
+      if(nameScene=='DungeonScene')
+      {
+        this.gridRowGamenHeight='100%'
+        this.gameScreenHeight= window.innerHeight
+      }
+      else if(nameScene=='PlayScene')
+      {
+        this.gridRowGamenHeight='90%'
+        this.gameScreenHeight= window.innerHeight-(window.innerHeight/10);
+      }
+      
+      this.resizeController();
+      
+      this.gameInstance = this.game.launch(this.containerId, this.$store, this.gameScreenHeight,this.gameScreenWidth, nameScene)
+    },
+
+    move: async function (type_move) {      
 
       if(this.gameIsLaunchInMobile==false)
        this.gameInstance.registry.events.emit('MOVE',type_move)    
@@ -256,9 +302,7 @@ export default {
 
     touch_move: function (type_move) {      
       if(this.gameIsLaunchInMobile)
-       this.gameInstance.registry.events.emit('MOVE',type_move)   
-
-     
+       this.gameInstance.registry.events.emit('MOVE',type_move) 
       
     },
 
@@ -269,6 +313,8 @@ export default {
          console.log("enter key was pressed!");
        }
     },
+
+    
   },
   destroyed() {
     this.gameInstance.destroy(false)
