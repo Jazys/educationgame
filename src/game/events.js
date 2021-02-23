@@ -13,4 +13,14 @@ events.on('bounce', (data) => {
   //events.emit("ATTACK",{weapon:'sword',strength:5,monster:'dragon'})
 })
 
+events.on('restart', (data) => {
+ 
+  events.store.commit('restart', {  
+    eventName: 'bounce',
+    data
+  })
+
+  //events.emit("ATTACK",{weapon:'sword',strength:5,monster:'dragon'})
+})
+
 export default events

@@ -4,6 +4,7 @@ import TILES from "./tile-mapping.js";
 import {showMessageBox} from './messageBox'
 
 var map=null ;
+var enableShowMessageBox=false;
 
 
 /**
@@ -24,11 +25,14 @@ export default class DungeonScene extends Scene {
 
   create() {
 
-    this.enemies = this.physics.add.group();
+    this.changeLevel=false;
     
-    this.setDungeons();
+    this.coins =  this.physics.add.group();
+    this.enemies = this.physics.add.group();
 
     this.setAnimations();
+    
+    this.setDungeons();    
 
     this.setPlayer();
 
@@ -44,11 +48,11 @@ export default class DungeonScene extends Scene {
 
     
     //met des monstre étoiles
-    this.stars = this.physics.add.group({
+    /*this.stars = this.physics.add.group({
       key: 'star',
       repeat: 11,
       setXY: { x: map.widthInPixels / 2, y: map.heightInPixels / 2+60, stepX: 70 }
-    });
+    });*/
      
     //pour la gestion des touches
     this.keys = this.input.keyboard.createCursorKeys();
@@ -63,7 +67,7 @@ export default class DungeonScene extends Scene {
       rooms: {
         width: { min: 7, max: 15 },
         height: { min: 7, max: 15 },
-        maxRooms: 5
+        maxRooms: 15
       }
     });
 
@@ -80,11 +84,11 @@ export default class DungeonScene extends Scene {
 
     //creation des couches
     //sol et murs
-    this.groundLayer = map.createBlankDynamicLayer("Ground", tileset);
+    this.groundLayer = map.createBlankLayer("Ground", tileset);
     //tours et autres
-    this.stuffLayer = map.createBlankDynamicLayer("Stuff", tileset);
+    this.stuffLayer = map.createBlankLayer("Stuff", tileset);
     //coffre
-    this.chestLayer = map.createBlankDynamicLayer("Chest", tileset);
+    this.chestLayer = map.createBlankLayer("Chest", tileset);
 
     this.groundLayer.fill(TILES.BLANK);    
 
@@ -95,7 +99,21 @@ export default class DungeonScene extends Scene {
 
 
       //Création des enemis
-      this.enemies.create(48*x +5*48, 48*y+5*48, 'bomb');
+      const ennemy = this.physics.add.sprite(48*x +5*48, 48*y+5*48, 'dragonblue');
+      //this.enemies.create(48*x +5*48, 48*y+5*48, 'dragonblue');
+      ennemy.setImmovable(true);       
+      this.enemies.add(ennemy);
+
+      var rand = Math.floor(Math.random() * 4) + 1 ;
+  
+
+      for (i = 0; i < rand ;i++) {
+        const coin = this.physics.add.sprite(48*x +5*48+i*48, 48*y+5*48-i*48, 'coin');
+        coin.setImmovable(true);
+        coin.anims.play('rotate');
+        this.coins.add(coin);
+      }
+      
 
       // Fill the floor with mostly clean tiles
       this.groundLayer.weightedRandomize(x + 1, y + 1, width - 2, height - 2, TILES.FLOOR);
@@ -232,6 +250,17 @@ export default class DungeonScene extends Scene {
       frameRate: 8,
       repeat: -1
     });
+
+    this.anims.create({
+      key: 'rotate',
+      frames: this.anims.generateFrameNumbers('coin', {
+        start: 0,
+        end: 5,
+      }),
+      frameRate: 15,
+      yoyo: true,
+      repeat: -1,
+    });
   }
 
   setCamera()
@@ -256,48 +285,155 @@ export default class DungeonScene extends Scene {
     
     // pour indiquer les collisions avec les murs
     this.physics.add.collider(this.container, this.groundLayer);
-    this.physics.add.collider(this.container, this.stuffLayer);
+    this.physics.add.collider(this.container, this.stuffLayer, this.onTouchStuff, false, this);
     this.physics.add.collider(this.container, this.chestLayer, this.onTouchChest,false,this);
 
     //collision des enemis avec l'exterieur
-    this.physics.add.collider(this.enemies, this.groundLayer, this.setEnenyDirection,false,this);
-    this.physics.add.collider(this.enemies, this.stuffLayer, this.setEnenyDirection,false,this);
+    this.colliderEnemyGround=this.physics.add.collider(this.enemies, this.groundLayer, this.setEnenyDirection,false,this);
+    this.colliderEnemyStuff=this.physics.add.collider(this.enemies, this.stuffLayer, this.setEnenyDirection,false,this);
 
 
     //Pour ajouter un event quand on touche une étoile avec l'épée
     //this.physics.add.overlap(this.weapon, this.stars, this.onMeetEnemy, null, this);
-    this.physics.add.overlap(this.weapon, this.enemies, this.onWeaponTouchEnemy, null, this);
+    this.colliderEnemyPlayer=this.physics.add.overlap(this.weapon, this.enemies, this.onWeaponTouchEnemy, null, this);
 
     //Quand le joueur collisionne l'étoile, on perds une vie par exemple
-    this.physics.add.collider(this.player, this.stars, this.onTouchEnemy, false, this);
+    this.physics.add.collider(this.player, this.coins, this.onTouchCoins, false, this);
     this.physics.add.collider(this.container, this.enemies, this.onTouchEnemy, null, this);
     
   }
 
   setEnenyDirection(enemy)
   {
-    if(enemy.data==1)
-      enemy.data=-1;
-    else
-      enemy.data=1;    
+    if(this.changeLevel==false)
+    {
+      if(enemy.data==1)
+        enemy.data=-1;
+      else
+        enemy.data=1; 
+    }   
   }
 
-  onWeaponTouchEnemy(weapon, enemies) {
+  onTouchCoins(player, coin) {    
+    coin.disableBody(true, true);
+  }
+
+  onTouchStuff(container, stuff)
+  { 
+    if(stuff.index==TILES.STAIRS && this.changeLevel==false)
+    {
+      
+      this.changeLevel=true;     
+          
+      
+      this.enemies.children.each(enemy => 
+      {         
+        enemy.body.setVelocity(0);
+        enemy.setActive(false);
+        enemy.body.moves= false;
+        enemy.disableBody(true,true);
+        this.enemies.killAndHide();
+      
+      });
+
+      this.coins.children.each(coin => 
+        {         
+          coin.body.setVelocity(0);
+          coin.setActive(false);
+          coin.body.moves= false;
+          coin.disableBody(true,true);
+          this.coins.killAndHide();
+        
+        });
+      const cam = this.cameras.main;
+      this.cameras.main.shake(0.05,100);
+      cam.fade(250, 0, 0, 0);
+      var self=this;
+      cam.once("camerafadeoutcomplete", () => {  
+
+          console.log(self.enemies);      
+          console.log(self.coins); 
+
+          self.enemies.clear(true);
+          self.coins.clear(true);
+      
+          //suppression de player
+          self.weapon.destroy();
+          self.player.destroy();
+          self.container.removeAllListeners();
+          self.container.removeAll(); 
+          self.container.destroy();
+
+          //suppression des collider
+          
+          self.colliderEnemyPlayer.destroy();
+          self.colliderEnemyGround.destroy();
+          self.colliderEnemyStuff.destroy();
+          self.physics.world.colliders.destroy();
+
+          //suppression des animations
+          self.anims.remove('player-walk');
+          self.anims.remove('player-walk-back');
+          self.anims.remove('rotation');
+
+          //enleve les event
+          self.events.off();            
+          
+          
+          //self.physics.shutdown();  
+          //map.removeAllLayers(); 
+          //self.scene.destroy();      
+          //self.scene.start('PlayScene');
+
+          //recrée le niveau
+          self.create();
+         
+
+          //ou rafraichit le niveua entierement
+          //this.registry.events.emit('restart',{sceneName : this.sceneName, data:'test'});   
+          self.cameras.main.fadeIn(250);
+        
+      });
+    }
+ 
+  }
+
+  onWeaponTouchEnemy(weapon, enemie) {
     if (this.attacking) {
       console.log("supper" +weapon);
-      enemies.disableBody(true, true);
+      console.log(enemie)
+      enemie.disableBody(true, true);
+      enemie.setActive(false);
+      enemie.setVisible(false);      
+      this.enemies.killAndHide(); 
     }
   }
 
-  onTouchChest()
+  onTouchChest(player, chest)
   {
     if(this.touchChest==false)
     {
       this.touchChest=true;
       setTimeout(() => {
-        this.touchChest=false;
+
+        if(this.touchChest)
+        {
+          this.touchChest=false;
+
+          //pour supprimer un tile du monde
+          map.removeTileAt(chest.x, chest.y, true, true, this.chestLayer);
+
+          //pour mettre en lieu et place une autre tule
+          this.stuffLayer.putTilesAt(TILES.TOWER, chest.x, chest.y);        
+          //this.stuffLayer.setCollisionByExclusion([-1, 6, 7, 8, 26]);
+        }
       }, 6000);
-      showMessageBox(this);
+
+      if(enableShowMessageBox)
+        showMessageBox(this);
+
+      console.log(chest);
+
       this.registry.events.emit('bounce',{sceneName : this.sceneName, data:'test'});
     }
   }
@@ -322,6 +458,13 @@ export default class DungeonScene extends Scene {
   }
 
   update() {
+
+    if (this.changeLevel)
+    {    
+      return ;
+    }
+      
+
     //this.player.update();
     const keys = this.keys;
     //var sprite = this.sprite;
@@ -401,7 +544,7 @@ export default class DungeonScene extends Scene {
     //Pour faire bouger l'épée si espace est appué
     if (Input.Keyboard.JustDown(keys.space) && !this.attacking) {
       this.attacking = true;   
-      
+
       setTimeout(() => {
         this.attacking = false;
         this.weapon.angle = 0;
@@ -433,11 +576,15 @@ export default class DungeonScene extends Scene {
       else this.player.setTexture("characters", 46);
     }
 
+    
     //pour les enemis   
     this.enemies.children.each(enemy => 
     {
-        enemy.setVelocityX(50*enemy.data);
+          enemy.body.setVelocityX(50*enemy.data);
+        
     });
+
+    
 
   }
 

@@ -7,6 +7,7 @@ export default new Vuex.Store({
   state: {
     count: -1,
     msgBox: { state: false, index: -1, sceneName:''},
+    restart:-1,
   },
 
   mutations: {
@@ -31,6 +32,13 @@ export default new Vuex.Store({
       state.msgBox.index=10;
       state.msgBox.sceneName='';
       state.count++
+    },
+
+    restart (state) {
+      //console.log(state)
+      console.log('value')
+      state.restart=1;
+      state.count++;
     },
     
   },

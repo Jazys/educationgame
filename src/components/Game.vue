@@ -27,15 +27,14 @@
       v-model="dialog"
       class="mx-auto "      
       v-on:keyup="keymonitor" 
-      ref="test1"
     >
       <v-card>
-        <v-card-title class="headline" ref="test2">
-          Use Google's location service?
+        <v-card-title class="headline">
+          Question pour un champion !
         </v-card-title>
 
         <v-card-text>
-          Let Google help apps determine location. This means sending anonymous location data to Google, even when no apps are running.
+          Ici il faut créer une question vis à vis du coffre ouvert. A chaque bonne réponse tu gagnes des points
 
           <v-row class="mx-auto"
               no-gutters>
@@ -46,19 +45,19 @@
                   color="green darken-1"
                   text
                   focus
-                  ref="supertest"
+                  ref="answer1"
                   @click="dialog = false"
                 >
-                Disagree
+                Réponse 1
               </v-btn>
               <v-btn
                 color="green darken-1"
                 text
                 focus
-                ref="supertest"
+                ref="answer2"
                 @click="dialog = false"
               >
-                Disagree
+                Réponse 2
               </v-btn>
             </v-col>
           </v-row>
@@ -69,17 +68,19 @@
            <v-btn
             color="green darken-1"
             text
+            ref="answer3"
             @click="dialog = false"
           >
-            Agree
+            Réponse 3
           </v-btn>
 
            <v-btn
             color="green darken-1"
             text
+            ref="answer4"
             @click="dialog = false"
           >
-            Agree
+            Réponse 4
           </v-btn>
           </v-col>
           
@@ -111,6 +112,8 @@ export default {
       downloaded: false,
       gameInstance: null,
       containerId: 'game-container',
+      //gridRowGamenHeight:'100%',
+      //gameScreenHeight: window.innerHeight-(window.innerHeight/10),
       gridRowGamenHeight:'90%',
       gameScreenHeight: window.innerHeight-(window.innerHeight/10),
       gameScreenWidth: window.innerWidth,
@@ -118,44 +121,64 @@ export default {
       dialog:false,
     }
   },
+
+  //permet de scruter les changements d'état du store
   watch: {
 
     '$store.state.msgBox.state': function() {
       if( this.$store.state.msgBox.state)
       {
-       
+        //met la scene en pause
         this.gameInstance.scene.pause(this.$store.state.msgBox.sceneName) 
+
+        //Pour jouer avec les scenes
+        //this.gameInstance.scene.sleep("DungeonScene") 
+        //this.gameInstance.scene.start("PlayScene")
+        //this.gameInstance.scene.stop("PlayScene") 
+        //this.gameInstance.scene.wake("DungeonScene") 
+        //this.gameInstance.scene.switch("DungeonScene")
+
+
+        //affiche la boite de dialoge
         this.dialog=true;
         const self = this;
         setTimeout(function () {
-          console.log(self.$refs.supertest);
-          self.$refs.supertest.$el.focus()
+          console.log(self.$refs.answer1);
+          self.$refs.answer1.$el.focus()
         }, 100)
       }      
      
+    },
+
+    '$store.state.restart': async function() {
+      
+      //Pour recharger brutalement le jeu car le restart ne fonctionne pas pour le dungeon
+      if( this.$store.state.restart==1)
+      {      
+        //met la scene en pause
+        //const game = await import(/* webpackChunkName: "game" */ '@/game/game')
+        //this.gameInstance = game.launch(this.containerId, this.$store, this.gameScreenHeight,this.gameScreenWidth)
+        //this.gameInstance.scene.switch("PlayScene")
+        //this.gameInstance.scene.stop("PlayScene") 
+        //this.gameInstance.scene.start("DungeonScene") 
+        //Pour jouer avec les scenes
+        window.location.reload();
+       
+      }      
      
-      console.log(this.$store.state.count)
     },
 
     'dialog': function() {
       if( this.dialog==false)
       {
+        //pour remettre le jeu en marche
         this.gameInstance.scene.wake(this.$store.state.msgBox.sceneName);
         this.$store.commit('disableMessageBox','');        
       }      
      
-     
-      console.log(this.$store.state.count)
     }
   },
   async mounted() {
-
-
-    console.log(this.$store.state)
-
-    console.log(this.$refs)
-
-   
 
     //Pour la gestion du menu du bas
     if( (window.innerHeight/10) < 30)
@@ -222,39 +245,25 @@ export default {
         }
     };
 
-
-
-
-
   },
    methods: {
-    move: function (type_move) {      
+     move: async function (type_move) {      
 
       if(this.gameIsLaunchInMobile==false)
-       this.gameInstance.registry.events.emit('MOVE',type_move)  
-
-       if(type_move=='right_up')
-       {
-      this.gameInstance.scene.sleep("DungeonScene") 
-      this.gameInstance.scene.start("PlayScene") 
-       }
-
-       if(type_move=='left_up')
-       {
-      this.gameInstance.scene.stop("PlayScene") 
-      this.gameInstance.scene.wake("DungeonScene") 
-       }
+       this.gameInstance.registry.events.emit('MOVE',type_move)    
+  
     },
 
     touch_move: function (type_move) {      
       if(this.gameIsLaunchInMobile)
        this.gameInstance.registry.events.emit('MOVE',type_move)   
-       this.gameInstance.scene.sleep("PlayScene") 
-       this.gameInstance.scene.switch("DungeonScene")
+
+     
+      
     },
 
     keymonitor: function(event) {
-        console.log(event.key);
+      console.log(event.key);
        if(event.key == "Enter")
        {
          console.log("enter key was pressed!");

@@ -9,6 +9,9 @@ import thudOgg from '@/game/assets/thud.ogg'
 import tiles from '@/game/assets/tilesets/buch-tileset-48px-extruded.png'
 import player from '@/game/assets/spritesheets/buch-characters-64px-extruded.png'
 import sword from '@/game/assets/sword.png'
+import dragonblue from '@/game/assets/dragonblue.png'
+import dragonorrange from '@/game/assets/dragonorrange.png'
+import coin from '@/game/assets/coin.png'
 
 export default class BootScene extends Scene {
   constructor () {
@@ -20,10 +23,13 @@ export default class BootScene extends Scene {
     this.load.image('ground', ground);
     this.load.image('star', star);
     this.load.image('bomb', bomb);
+    this.load.spritesheet("dragonblue", dragonblue,  { frameWidth: 64, frameHeight: 64 });
+    this.load.image("dragonorrange", dragonorrange);
     this.load.spritesheet('dude', 
         dude,
         { frameWidth: 32, frameHeight: 48 }
     );
+    this.load.spritesheet('coin', coin, { frameWidth: 20, frameHeight: 20 });
     this.load.audio('thud', [thudMp3, thudOgg])
     this.load.image("tiles", tiles);
     this.load.spritesheet(

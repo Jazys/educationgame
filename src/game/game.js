@@ -12,6 +12,9 @@ import event from './events'
 // https://github.com/B3L7/phaser3-tilemap-pack  ==> interessant
 // https://github.com/OlawaleJoseph/RPG-GAME/tree/develop/src/scenes
 
+//menu
+//https://phasertutorials.com/creating-a-phaser-3-template-part-3/
+
 function launch(containerId, store, heigthGame, widthGame) {
 
   console.log(heigthGame +":"+ widthGame)
