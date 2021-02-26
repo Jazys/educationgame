@@ -12,7 +12,7 @@ var socketConnection=null;
 const useSocketIo=false;
 
 if(!useSocketIo)
-    socketConnection = new W3CWebSocket('ws://192.168.1.33:9091','');
+    socketConnection = new W3CWebSocket('ws://192.168.1.26:9091','');
 else
     socketConnection = io('http://192.168.1.3:9092');
 

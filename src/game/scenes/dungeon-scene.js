@@ -5,6 +5,7 @@ import {showMessageBox} from './messageBox'
 
 var map=null ;
 var enableShowMessageBox=false;
+var virtualGamePad='';
 
 
 /**
@@ -65,6 +66,8 @@ export default class DungeonScene extends Scene {
      
     //pour la gestion des touches
     this.keys = this.input.keyboard.createCursorKeys();
+
+    this.registry.events.on('MOVE',this.doMove.bind(this));
   }
 
   setDungeons(debug=false)
@@ -216,12 +219,12 @@ export default class DungeonScene extends Scene {
   {
     ///Pour ajouter le joueur, attention on le met en 0,0 car on va le mettre dans un container
     this.player = this.physics.add.sprite(0, -10, 'characters', 6);
-    this.player.setSize(40, 40); 
+    this.player.setSize(35, 35); 
 
     //on crée le containeur qui va contenir le joueur, nom et arme
     this.container = this.add.container(map.widthInPixels / 2, map.heightInPixels / 2); 
     //one lui donne une taille
-    this.container.setSize(40, 40); 
+    this.container.setSize(35, 35); 
     //Ajout d'on objet dans le monde
     this.physics.world.enable(this.container);
 
@@ -239,7 +242,7 @@ export default class DungeonScene extends Scene {
     this.container.add(this.weapon);
 
     //Ajout du texte pour le nom du personnage
-    var text = this.add.text(0, -30, 'Julien');
+    var text = this.add.text(0, -30, 'JJ');
     text.font = "Arial";
     text.setOrigin(0.5, 0.5);
     this.container.add(text);
@@ -486,14 +489,14 @@ export default class DungeonScene extends Scene {
     //this.player.update();
     const keys = this.keys;
     //var sprite = this.sprite;
-    const speed = 80;
+    const speed = 50;
     const prevVelocity = this.container.body.velocity.clone();
 
     // Stop any previous movement from the last frame
     this.container.body.setVelocity(0);
 
     // Horizontal movement
-    if (keys.left.isDown) {
+    if (virtualGamePad=='left_down'||  keys.left.isDown) {
         this.container.body.setVelocityX(-speed);
 
       this.player.setFlipX(true);
@@ -510,7 +513,7 @@ export default class DungeonScene extends Scene {
         this.left=true;
       }
 
-    } else if (keys.right.isDown) {
+    } else if (virtualGamePad=='right_down'||  keys.right.isDown) {
   
       this.container.body.setVelocityX(speed)
  
@@ -530,7 +533,7 @@ export default class DungeonScene extends Scene {
     }
 
     // Vertical movement
-    if (keys.up.isDown) {
+    if (virtualGamePad=='key_up'|| keys.up.isDown) {
       this.container.body.setVelocityY(-speed)
 
       //pour mettre l'épée en cohérence avec le player
@@ -543,7 +546,9 @@ export default class DungeonScene extends Scene {
         this.weapon.x=this.player.x;
         this.up=true;
       }
-    } else if (keys.down.isDown) {  
+    } 
+    else if (virtualGamePad=='key_down' || keys.down.isDown) 
+    {  
       this.container.body.setVelocityY(speed);
 
       //pour mettre l'épée en cohérence avec le player
@@ -560,7 +565,7 @@ export default class DungeonScene extends Scene {
 
 
     //Pour faire bouger l'épée si espace est appué
-    if (Input.Keyboard.JustDown(keys.space) && !this.attacking) {
+    if ( (virtualGamePad=='key_a' || Input.Keyboard.JustDown(keys.space)) && !this.attacking) {
       this.attacking = true;   
 
       setTimeout(() => {
@@ -582,9 +587,9 @@ export default class DungeonScene extends Scene {
     this.container.body.velocity.normalize().scale(speed);
 
     // Update the animation last and give left/right/down animations precedence over up animations
-    if (keys.left.isDown || keys.right.isDown || keys.down.isDown) {
+    if (virtualGamePad=='key_down' || virtualGamePad=='left_down' || virtualGamePad=='right_down' || keys.left.isDown || keys.right.isDown || keys.down.isDown) {
       this.player.anims.play("player-walk", true);
-    } else if (keys.up.isDown) {
+    } else if (virtualGamePad=='key_up' || keys.up.isDown) {
       this.player.anims.play("player-walk-back", true);
     } else {
       this.player.anims.stop();
@@ -602,8 +607,12 @@ export default class DungeonScene extends Scene {
         
     });
 
-    
+  }
 
+  doMove(type_move)
+  {
+      virtualGamePad=type_move;
+      console.log(virtualGamePad);
   }
 
 }

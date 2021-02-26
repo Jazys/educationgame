@@ -170,7 +170,7 @@ export default class PlayScene extends Scene {
 
   doMove(type_move)
   {    
-    if(type_move=='jump')
+    if(type_move=='key_a')
     {
       if (player.body.onFloor())
       {
