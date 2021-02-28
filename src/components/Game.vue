@@ -71,7 +71,6 @@
               <v-btn
                 color="green darken-1"
                 text
-                focus
                 ref="answer2"
                 @click="dialog = false"
               >
@@ -139,6 +138,8 @@ export default {
       gameScreenWidth: window.innerWidth,
       useElectronWithSerialPort:false,
       dialog:false,
+      currentPositionAnswser:1,
+      
     }
   },
 
@@ -210,6 +211,28 @@ export default {
 
     }
 
+    window.addEventListener('deviceready', function () {
+    var ws = new WebSocket('ws://127.0.0.1:9091');
+ 
+    ws.onopen = function () {
+        console.log('open');
+        this.send('hello');         // transmit "hello" after connecting
+    };
+ 
+    ws.onmessage = function (event) {
+        console.log(event.data);    // will be "hello"
+        this.close();
+    };
+ 
+    ws.onerror = function () {
+        console.log('error occurred!');
+    };
+ 
+    ws.onclose = function (event) {
+        console.log('close code=' + event.code);
+    };
+});
+
     //Pour charger le jeu
     this.game = await import(/* webpackChunkName: "game" */ '@/game/game')
     this.downloaded = true  
@@ -224,7 +247,7 @@ export default {
 
     socket.onopen = function() {
         console.log('WebSocket Client Connected');
-
+       
         /*function sendNumber() {
             if (client.readyState === client.OPEN) {
                 var number = Math.round(Math.random() * 0xFFFFFF);
@@ -244,7 +267,77 @@ export default {
     socket.onmessage = function(e) {
         if (typeof e.data === 'string') {
             console.log("Received: '" + e.data + "'");
-            self.gameInstance.registry.events.emit('MOVE',e.data)   
+            if(self.dialog==false)
+            {
+              self.gameInstance.registry.events.emit('MOVE',e.data);
+              self.currentPositionAnswser=1;
+            }
+            else
+            {
+              if(e.data=="right_down")
+              {
+                if(self.currentPositionAnswser==1)
+                {
+                  self.$refs.answer2.$el.focus();
+                  self.currentPositionAnswser=2;
+                }
+                else
+                {
+                  self.$refs.answer4.$el.focus();
+                  self.currentPositionAnswser=4;
+                }
+              }
+              else if(e.data=="left_down")
+              {
+                if(self.currentPositionAnswser==2)
+                {
+                  self.$refs.answer1.$el.focus();
+                  self.currentPositionAnswser=1;
+                }
+                else
+                {
+                  self.$refs.answer3.$el.focus();
+                  self.currentPositionAnswser=3;
+                }
+              }
+              else if(e.data=="key_down")
+              {
+                if(self.currentPositionAnswser==1)
+                {
+                  self.$refs.answer3.$el.focus();
+                  self.currentPositionAnswser=3;
+                }
+                else
+                {
+                  self.$refs.answer4.$el.focus();
+                  self.currentPositionAnswser=4;
+                }
+              }
+              else if(e.data=="key_up")
+              {
+                if(self.currentPositionAnswser==3)
+                {
+                  self.$refs.answer1.$el.focus();
+                  self.currentPositionAnswser=1;
+                }
+                else
+                {
+                  self.$refs.answer2.$el.focus();
+                  self.currentPositionAnswser=2;
+                }
+              }
+              else if(e.data=="key_a")
+              {
+                self.dialog=false;
+
+                //en fonction de la question, on regarde quelle est la bonne réponse
+                if(self.currentPositionAnswser==3)
+                  console.log("Bonne réponse");
+              }
+
+
+            }
+
         }
     };
 
@@ -275,12 +368,12 @@ export default {
     //creation du jeu phaser
     startGame: function(nameScene)
     {
-      this.selectGame=true;
+      this.selectGame=false;
 
       if(nameScene=='DungeonScene')
       {
-        this.gridRowGamenHeight='100%'
-        this.gameScreenHeight= window.innerHeight
+        this.gridRowGamenHeight='100%';
+        this.gameScreenHeight= window.innerHeight;
       }
       else if(nameScene=='PlayScene')
       {
@@ -288,7 +381,7 @@ export default {
         this.gameScreenHeight= window.innerHeight-(window.innerHeight/10);
       }
       
-      this.resizeController();
+      //this.resizeController();
       
       this.gameInstance = this.game.launch(this.containerId, this.$store, this.gameScreenHeight,this.gameScreenWidth, nameScene)
     },
