@@ -1,7 +1,7 @@
 <template>
 <v-container class="pa-0 ma-0 mb-0">
   <div class="grid-container" :style="`--height: ${gridRowGamenHeight}`">  
-    <v-btn
+   <!-- <v-btn
         color="green darken-1"
         text
         focus
@@ -10,6 +10,8 @@
       >
       PlayScene
     </v-btn>
+    -->
+    <center>
     <v-btn
         color="green darken-1"
         text
@@ -17,8 +19,9 @@
         ref="answer1"
         @click="startGame('DungeonScene')"
       >
-      DungeonScene
+      DungeonScene - Cliquer pour Démarrer
     </v-btn> 
+    </center>
     <div class="game" :id="containerId" v-if="downloaded" />
     <div class="placeholder" v-else>
       Downloading ...
